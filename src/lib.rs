@@ -82,17 +82,22 @@ pub trait NextHeader: Sized {
     #[inline(always)]
     /// Returns the next header, interpreted as the given type. For example, if you have a UDP
     /// header (e.g. `udp_hdr`) and you know the next header will be VXLAN, pass T = [`vxlan::Header`]
-    /// and it will return a pointer to the VXLAN header.
+    /// and it will return a pointer to the VXLAN header:
+    ///
+    ///     let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
     fn next_t<T: NextHeader>(&self, ctx: impl ebpf::HasRange<usize>) -> Result<Ptr<T>, ()> {
-        let me = self as *const Self;
-        let pointer = unsafe { me.offset(1) as *const T };
-        let next = unsafe { pointer.offset(1) };
+        let next = unsafe {
+            let me = self as *const Self;
+            me.offset(1) as *const T
+        };
 
-        if next > ctx.range().end as *const T {
-            return Err(());
+        let next_end = unsafe { next.offset(1) };
+        let end = ctx.range().end as *const T;
+
+        match next_end > end {
+            false => Ok(Ptr::new(next)),
+            true => Err(()),
         }
-
-        Ok(Ptr::new(pointer as *const T))
     }
 }
 
