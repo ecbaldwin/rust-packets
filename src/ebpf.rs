@@ -1,10 +1,10 @@
 use aya_ebpf::programs::XdpContext;
 
-pub trait HasRange: Sized {
-    fn range(&self) -> core::ops::Range<usize>;
+pub trait HasRange<T>: Sized {
+    fn range(&self) -> core::ops::Range<T>;
 }
 
-impl HasRange for &XdpContext {
+impl HasRange<usize> for &XdpContext {
     #[inline(always)]
     fn range(&self) -> core::ops::Range<usize> {
         return core::ops::Range {
