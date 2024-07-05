@@ -32,7 +32,9 @@ impl Header {
     pub const LEN: usize = mem::size_of::<Header>();
 
     #[inline(always)]
-    pub fn from_ctx(ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::Ptr<Header>, ()> {
+    pub fn from_ctx(
+        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    ) -> Result<super::Ptr<Header>, ()> {
         let range = ctx.range();
         let pointer = range.start as *const Header;
         unsafe {
@@ -48,7 +50,10 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(&self, ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::HeaderPtr, ()> {
+    fn next(
+        &self,
+        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    ) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.ether_type {

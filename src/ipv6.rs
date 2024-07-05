@@ -89,7 +89,10 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(&self, ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::HeaderPtr, ()> {
+    fn next(
+        &self,
+        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    ) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.proto {

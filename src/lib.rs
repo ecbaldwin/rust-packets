@@ -75,7 +75,7 @@ pub trait AutoNextHeader: Sized {
     /// example, If you have an Ethernet header and its EtherType field indicates that the next
     /// header should be Ipv6 (i.e. `0x86DD`) then calling this method will return an instance of
     /// [`HeaderPtr::Ipv6`] pointing to the correct next header location.
-    fn next(&self, ctx: impl ebpf::HasRange<usize>) -> Result<HeaderPtr, ()>;
+    fn next(&self, ctx: impl ebpf::HasRange<*const core::ffi::c_void>) -> Result<HeaderPtr, ()>;
 }
 
 pub trait NextHeader: Sized {
@@ -85,7 +85,10 @@ pub trait NextHeader: Sized {
     /// and it will return a pointer to the VXLAN header:
     ///
     ///     let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
-    fn next_t<T: NextHeader>(&self, ctx: impl ebpf::HasRange<usize>) -> Result<Ptr<T>, ()> {
+    fn next_t<T: NextHeader>(
+        &self,
+        ctx: impl ebpf::HasRange<*const core::ffi::c_void>,
+    ) -> Result<Ptr<T>, ()> {
         let next = unsafe {
             let me = self as *const Self;
             me.offset(1) as *const T

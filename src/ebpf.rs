@@ -4,12 +4,12 @@ pub trait HasRange<T>: Sized {
     fn range(&self) -> core::ops::Range<T>;
 }
 
-impl HasRange<usize> for &XdpContext {
+impl HasRange<*const core::ffi::c_void> for &XdpContext {
     #[inline(always)]
-    fn range(&self) -> core::ops::Range<usize> {
+    fn range(&self) -> core::ops::Range<*const core::ffi::c_void> {
         return core::ops::Range {
-            start: self.data(),
-            end: self.data_end(),
+            start: self.data() as *const core::ffi::c_void,
+            end: self.data_end() as *const core::ffi::c_void,
         };
     }
 }
