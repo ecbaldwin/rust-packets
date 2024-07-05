@@ -84,7 +84,7 @@ pub trait NextHeader: Sized {
     /// header (e.g. `udp_hdr`) and you know the next header will be VXLAN, pass T = [`vxlan::Header`]
     /// and it will return a pointer to the VXLAN header:
     ///
-    ///     let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
+    /// let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
     fn next_t<T: NextHeader>(
         &self,
         ctx: impl ebpf::HasRange<*const core::ffi::c_void>,
