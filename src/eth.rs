@@ -66,7 +66,7 @@ impl super::AutoNextHeader for Header {
             Type::IPV6 => Ok(super::HeaderPtr::Ipv6(
                 self.next_t::<super::ipv6::Header>(ctx)?,
             )),
-            _ => Err(()),
+            _ => Ok(super::HeaderPtr::Unhandled()),
         }
     }
 }

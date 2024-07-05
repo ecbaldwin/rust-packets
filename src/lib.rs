@@ -68,6 +68,7 @@ pub enum HeaderPtr {
     Tcp(Ptr<tcp::Header>),
     Udp(Ptr<udp::Header>),
     Vxlan(Ptr<vxlan::Header>),
+    Unhandled(),
 }
 
 pub trait AutoNextHeader: Sized {

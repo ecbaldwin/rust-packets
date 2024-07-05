@@ -102,7 +102,7 @@ impl super::AutoNextHeader for Header {
             super::ip::Proto::UDP => Ok(super::HeaderPtr::Udp(
                 self.next_t::<super::udp::Header>(ctx)?,
             )),
-            _ => Err(()),
+            _ => Ok(super::HeaderPtr::Unhandled()),
         }
     }
 }
