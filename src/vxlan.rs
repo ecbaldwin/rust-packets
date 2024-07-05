@@ -61,12 +61,12 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(&self, data_end: usize) -> Result<super::HeaderPtr, ()> {
+    fn next(&self, ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
-        Ok(super::HeaderPtr::Eth(self.next_t::<super::eth::Header>(
-            data_end as *const super::eth::Header,
-        )?))
+        Ok(super::HeaderPtr::Eth(
+            self.next_t::<super::eth::Header>(ctx)?,
+        ))
     }
 }
 

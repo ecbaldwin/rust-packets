@@ -48,18 +48,18 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(&self, data_end: usize) -> Result<super::HeaderPtr, ()> {
+    fn next(&self, ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.ether_type {
             Type::ARP => Ok(super::HeaderPtr::Arp(
-                self.next_t::<super::arp::Header>(data_end as *const super::arp::Header)?,
+                self.next_t::<super::arp::Header>(ctx)?,
             )),
             Type::IPV4 => Ok(super::HeaderPtr::Ipv4(
-                self.next_t::<super::ipv4::Header>(data_end as *const super::ipv4::Header)?,
+                self.next_t::<super::ipv4::Header>(ctx)?,
             )),
             Type::IPV6 => Ok(super::HeaderPtr::Ipv6(
-                self.next_t::<super::ipv6::Header>(data_end as *const super::ipv6::Header)?,
+                self.next_t::<super::ipv6::Header>(ctx)?,
             )),
             _ => Err(()),
         }

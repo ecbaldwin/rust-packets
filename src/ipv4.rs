@@ -91,15 +91,15 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(&self, data_end: usize) -> Result<super::HeaderPtr, ()> {
+    fn next(&self, ctx: impl crate::ebpf::HasRange<usize>) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.proto {
             super::ip::Proto::TCP => Ok(super::HeaderPtr::Tcp(
-                self.next_t::<super::tcp::Header>(data_end as *const super::tcp::Header)?,
+                self.next_t::<super::tcp::Header>(ctx)?,
             )),
             super::ip::Proto::UDP => Ok(super::HeaderPtr::Udp(
-                self.next_t::<super::udp::Header>(data_end as *const super::udp::Header)?,
+                self.next_t::<super::udp::Header>(ctx)?,
             )),
             _ => Err(()),
         }

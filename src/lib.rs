@@ -75,7 +75,7 @@ pub trait AutoNextHeader: Sized {
     /// example, If you have an Ethernet header and its EtherType field indicates that the next
     /// header should be Ipv6 (i.e. `0x86DD`) then calling this method will return an instance of
     /// [`HeaderPtr::Ipv6`] pointing to the correct next header location.
-    fn next(&self, data_end: usize) -> Result<HeaderPtr, ()>;
+    fn next(&self, ctx: impl ebpf::HasRange<usize>) -> Result<HeaderPtr, ()>;
 }
 
 pub trait NextHeader: Sized {
@@ -83,34 +83,16 @@ pub trait NextHeader: Sized {
     /// Returns the next header, interpreted as the given type. For example, if you have a UDP
     /// header (e.g. `udp_hdr`) and you know the next header will be VXLAN, pass T = [`vxlan::Header`]
     /// and it will return a pointer to the VXLAN header.
-    fn next_r<T: NextHeader>(&self, data_end: *const T) -> Result<Ptr<T>, ()> {
+    fn next_t<T: NextHeader>(&self, ctx: impl ebpf::HasRange<usize>) -> Result<Ptr<T>, ()> {
         let me = self as *const Self;
-        unsafe {
-            let pointer = me.offset(1) as *const T;
+        let pointer = unsafe { me.offset(1) as *const T };
+        let next = unsafe { pointer.offset(1) };
 
-            if pointer.offset(1) > data_end {
-                return Err(());
-            }
-
-            Ok(Ptr::new(pointer as *const T))
+        if next > ctx.range().end as *const T {
+            return Err(());
         }
-    }
 
-    #[inline(always)]
-    /// Returns the next header, interpreted as the given type. For example, if you have a UDP
-    /// header (e.g. `udp_hdr`) and you know the next header will be VXLAN, pass T = [`vxlan::Header`]
-    /// and it will return a pointer to the VXLAN header.
-    fn next_t<T: NextHeader>(&self, data_end: *const T) -> Result<Ptr<T>, ()> {
-        let me = self as *const Self;
-        unsafe {
-            let pointer = me.offset(1) as *const T;
-
-            if pointer.offset(1) > data_end {
-                return Err(());
-            }
-
-            Ok(Ptr::new(pointer as *const T))
-        }
+        Ok(Ptr::new(pointer as *const T))
     }
 }
 
