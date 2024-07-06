@@ -16,8 +16,8 @@ pub struct Header {
     pub ttl: u8,
     pub proto: super::ip::Proto,
     pub check: be16,
-    pub src_addr: [u8; 4],
-    pub dst_addr: [u8; 4],
+    pub source: [u8; 4],
+    pub destination: [u8; 4],
 }
 
 impl Header {
@@ -65,26 +65,26 @@ impl Header {
 
     /// Returns the source address field.
     #[inline(always)]
-    pub fn src_addr(&self) -> core::net::Ipv4Addr {
-        core::net::Ipv4Addr::from(self.src_addr)
+    pub fn source(&self) -> core::net::Ipv4Addr {
+        core::net::Ipv4Addr::from(self.source)
     }
 
     /// Returns the destination address field.
     #[inline(always)]
-    pub fn dst_addr(&self) -> core::net::Ipv4Addr {
-        core::net::Ipv4Addr::from(self.dst_addr)
+    pub fn destination(&self) -> core::net::Ipv4Addr {
+        core::net::Ipv4Addr::from(self.destination)
     }
 
     /// Sets the source address field.
     #[inline(always)]
-    pub fn set_src_addr(&mut self, src: core::net::Ipv4Addr) {
-        self.src_addr = src.octets();
+    pub fn set_source(&mut self, src: core::net::Ipv4Addr) {
+        self.source = src.octets();
     }
 
     /// Sets the destination address field.
     #[inline(always)]
-    pub fn set_dst_addr(&mut self, dst: core::net::Ipv4Addr) {
-        self.dst_addr = dst.octets();
+    pub fn set_destination(&mut self, dst: core::net::Ipv4Addr) {
+        self.destination = dst.octets();
     }
 }
 

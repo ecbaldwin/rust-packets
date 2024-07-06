@@ -50,6 +50,9 @@ impl<T> Ptr<T> {
     pub fn new(pointer: *const T) -> Self {
         Self { pointer }
     }
+    pub fn offset(&self, ctx: impl ebpf::HasRange<*const core::ffi::c_void>) -> i32 {
+        (self.pointer as isize - ctx.range().start as isize) as i32
+    }
 }
 
 impl<T> core::ops::Deref for Ptr<T> {
