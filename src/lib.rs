@@ -127,5 +127,3 @@ pub mod udp;
 pub mod vxlan;
 
 pub mod meta;
-
-pub mod ebpf;
