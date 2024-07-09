@@ -18,11 +18,11 @@ impl Flags {
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Header {
     /// Flags
-    pub flags: Flags,
+    flags: Flags,
     /// Reserved
     _reserved3: [u8; 3],
     /// VXLAN Network ID
-    pub vni: [u8; 3],
+    vni: [u8; 3],
     /// Reserved
     _reserved: u8,
 }
