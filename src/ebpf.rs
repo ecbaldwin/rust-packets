@@ -1,25 +1,25 @@
 use aya_ebpf::programs::{TcContext, XdpContext};
 
-pub trait HasRange<T>: Sized {
-    fn range(&self) -> core::ops::Range<T>;
+pub trait HasFrame<T>: Sized {
+    fn frame(&self) -> core::ops::Range<T>;
 }
 
-impl HasRange<*const core::ffi::c_void> for &XdpContext {
+impl HasFrame<*mut core::ffi::c_void> for XdpContext {
     #[inline(always)]
-    fn range(&self) -> core::ops::Range<*const core::ffi::c_void> {
+    fn frame(&self) -> core::ops::Range<*mut core::ffi::c_void> {
         return core::ops::Range {
-            start: self.data() as *const core::ffi::c_void,
-            end: self.data_end() as *const core::ffi::c_void,
+            start: self.data() as *mut core::ffi::c_void,
+            end: self.data_end() as *mut core::ffi::c_void,
         };
     }
 }
 
-impl HasRange<*const core::ffi::c_void> for &TcContext {
+impl HasFrame<*mut core::ffi::c_void> for TcContext {
     #[inline(always)]
-    fn range(&self) -> core::ops::Range<*const core::ffi::c_void> {
+    fn frame(&self) -> core::ops::Range<*mut core::ffi::c_void> {
         return core::ops::Range {
-            start: self.data() as *const core::ffi::c_void,
-            end: self.data_end() as *const core::ffi::c_void,
+            start: self.data() as *mut core::ffi::c_void,
+            end: self.data_end() as *mut core::ffi::c_void,
         };
     }
 }

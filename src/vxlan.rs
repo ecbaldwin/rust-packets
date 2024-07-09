@@ -56,20 +56,26 @@ impl Header {
     pub fn clear_vni(&mut self) {
         self.flags = Flags::NO_VNI;
     }
+
+    #[inline(always)]
+    pub fn ethernet_mut(
+        &mut self,
+        frame: core::ops::Range<*mut core::ffi::c_void>,
+    ) -> Result<super::Ptr<super::eth::Header>, ()> {
+        use super::NextHeader;
+
+        Ok(self.next_t_mut::<super::eth::Header>(frame)?)
+    }
 }
 
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(
-        &self,
-        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    fn next_mut(
+        &mut self,
+        frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
-        use super::NextHeader;
-
-        Ok(super::HeaderPtr::Eth(
-            self.next_t::<super::eth::Header>(ctx)?,
-        ))
+        Ok(super::HeaderPtr::Eth(self.ethernet_mut(frame)?))
     }
 }
 

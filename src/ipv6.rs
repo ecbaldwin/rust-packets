@@ -89,18 +89,18 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(
-        &self,
-        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    fn next_mut(
+        &mut self,
+        frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.proto {
             super::ip::Proto::TCP => Ok(super::HeaderPtr::Tcp(
-                self.next_t::<super::tcp::Header>(ctx)?,
+                self.next_t_mut::<super::tcp::Header>(frame)?,
             )),
             super::ip::Proto::UDP => Ok(super::HeaderPtr::Udp(
-                self.next_t::<super::udp::Header>(ctx)?,
+                self.next_t_mut::<super::udp::Header>(frame)?,
             )),
             _ => Ok(super::HeaderPtr::Unhandled()),
         }

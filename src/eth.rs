@@ -32,17 +32,16 @@ impl Header {
     pub const LEN: usize = mem::size_of::<Header>();
 
     #[inline(always)]
-    pub fn from_ctx(
-        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    pub fn from_frame_mut(
+        frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::Ptr<Header>, ()> {
-        let range = ctx.range();
-        let pointer = range.start as *const Header;
+        let pointer = frame.start as *mut Header;
         unsafe {
-            if pointer.offset(1) > (range.end as *const Header) {
+            if pointer.offset(1) > (frame.end as *mut Header) {
                 return Err(());
             }
 
-            Ok(super::Ptr::new(pointer as *const Header))
+            Ok(super::Ptr::new(pointer as *mut Header))
         }
     }
 }
@@ -50,21 +49,21 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next(
-        &self,
-        ctx: impl crate::ebpf::HasRange<*const core::ffi::c_void>,
+    fn next_mut(
+        &mut self,
+        frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
         use super::NextHeader;
 
         match self.ether_type {
             Type::ARP => Ok(super::HeaderPtr::Arp(
-                self.next_t::<super::arp::Header>(ctx)?,
+                self.next_t_mut::<super::arp::Header>(frame)?,
             )),
             Type::IPV4 => Ok(super::HeaderPtr::Ipv4(
-                self.next_t::<super::ipv4::Header>(ctx)?,
+                self.next_t_mut::<super::ipv4::Header>(frame)?,
             )),
             Type::IPV6 => Ok(super::HeaderPtr::Ipv6(
-                self.next_t::<super::ipv6::Header>(ctx)?,
+                self.next_t_mut::<super::ipv6::Header>(frame)?,
             )),
             _ => Ok(super::HeaderPtr::Unhandled()),
         }

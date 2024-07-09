@@ -43,15 +43,15 @@ impl From<be32> for u32 {
 }
 
 pub struct Ptr<T: ?Sized> {
-    pointer: *const T,
+    pointer: *mut T,
 }
 
 impl<T> Ptr<T> {
-    pub fn new(pointer: *const T) -> Self {
+    pub fn new(pointer: *mut T) -> Self {
         Self { pointer }
     }
-    pub fn offset(&self, ctx: impl ebpf::HasRange<*const core::ffi::c_void>) -> i32 {
-        (self.pointer as isize - ctx.range().start as isize) as i32
+    pub fn offset(&self, frame: core::ops::Range<*mut core::ffi::c_void>) -> i32 {
+        (self.pointer as isize - frame.start as isize) as i32
     }
 }
 
@@ -60,6 +60,12 @@ impl<T> core::ops::Deref for Ptr<T> {
 
     fn deref(&self) -> &Self::Target {
         unsafe { &*self.pointer }
+    }
+}
+
+impl<T> core::ops::DerefMut for Ptr<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { &mut *self.pointer }
     }
 }
 
@@ -79,7 +85,10 @@ pub trait AutoNextHeader: Sized {
     /// example, If you have an Ethernet header and its EtherType field indicates that the next
     /// header should be Ipv6 (i.e. `0x86DD`) then calling this method will return an instance of
     /// [`HeaderPtr::Ipv6`] pointing to the correct next header location.
-    fn next(&self, ctx: impl ebpf::HasRange<*const core::ffi::c_void>) -> Result<HeaderPtr, ()>;
+    fn next_mut(
+        &mut self,
+        range: core::ops::Range<*mut core::ffi::c_void>,
+    ) -> Result<HeaderPtr, ()>;
 }
 
 pub trait NextHeader: Sized {
@@ -89,17 +98,17 @@ pub trait NextHeader: Sized {
     /// and it will return a pointer to the VXLAN header:
     ///
     /// let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
-    fn next_t<T: NextHeader>(
-        &self,
-        ctx: impl ebpf::HasRange<*const core::ffi::c_void>,
+    fn next_t_mut<T: NextHeader>(
+        &mut self,
+        range: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<Ptr<T>, ()> {
         let next = unsafe {
-            let me = self as *const Self;
-            me.offset(1) as *const T
+            let me = self as *mut Self;
+            me.offset(1) as *mut T
         };
 
         let next_end = unsafe { next.offset(1) };
-        let end = ctx.range().end as *const T;
+        let end = range.end as *mut T;
 
         match next_end > end {
             false => Ok(Ptr::new(next)),
