@@ -1,5 +1,7 @@
 use core::mem;
 
+use crate::be16;
+
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Flags {
     val: u8,
@@ -58,24 +60,41 @@ impl Header {
     }
 
     #[inline(always)]
-    pub fn ethernet_mut(
+    pub fn ethernet(
         &mut self,
         frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::Ptr<super::eth::Header>, ()> {
         use super::NextHeader;
 
-        Ok(self.next_t_mut::<super::eth::Header>(frame)?)
+        Ok(self.next_t::<super::eth::Header>(frame)?)
+    }
+
+    #[inline(always)]
+    pub fn source_port(&mut self, frame: core::ops::Range<*mut core::ffi::c_void>) -> be16 {
+        use super::NextHeader;
+
+        match self.next_t::<super::eth::Header>(frame) {
+            Err(_) => 0.into(),
+            Ok(e) => {
+                let vals = unsafe {
+                    core::slice::from_raw_parts(&*e as *const super::eth::Header as *const be16, 7)
+                };
+                let zero = be16::from(0);
+                let val = vals.iter().fold(zero, |acc, e| acc ^ *e);
+                val
+            }
+        }
     }
 }
 
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next_mut(
+    fn next(
         &mut self,
         frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
-        Ok(super::HeaderPtr::Eth(self.ethernet_mut(frame)?))
+        Ok(super::HeaderPtr::Eth(self.ethernet(frame)?))
     }
 }
 

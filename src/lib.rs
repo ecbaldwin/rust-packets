@@ -1,7 +1,7 @@
 #![no_std]
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub struct be16 {
     val: u16,
 }
@@ -24,8 +24,18 @@ impl From<be16> for u16 {
     }
 }
 
+impl core::ops::BitXor for be16 {
+    type Output = be16;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self {
+            val: self.val ^ rhs.val,
+        }
+    }
+}
+
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, Default, PartialEq, Eq, Copy, Clone)]
 pub struct be32 {
     val: u32,
 }
@@ -39,6 +49,16 @@ impl From<u32> for be32 {
 impl From<be32> for u32 {
     fn from(be: be32) -> Self {
         u32::from_be(be.val)
+    }
+}
+
+impl core::ops::BitXor for be32 {
+    type Output = be32;
+
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self {
+            val: self.val ^ rhs.val,
+        }
     }
 }
 
@@ -85,10 +105,7 @@ pub trait AutoNextHeader: Sized {
     /// example, If you have an Ethernet header and its EtherType field indicates that the next
     /// header should be Ipv6 (i.e. `0x86DD`) then calling this method will return an instance of
     /// [`HeaderPtr::Ipv6`] pointing to the correct next header location.
-    fn next_mut(
-        &mut self,
-        range: core::ops::Range<*mut core::ffi::c_void>,
-    ) -> Result<HeaderPtr, ()>;
+    fn next(&mut self, range: core::ops::Range<*mut core::ffi::c_void>) -> Result<HeaderPtr, ()>;
 }
 
 pub trait NextHeader: Sized {
@@ -98,7 +115,7 @@ pub trait NextHeader: Sized {
     /// and it will return a pointer to the VXLAN header:
     ///
     /// let vxlan_h = udp_h.next_t::<vxlan::Header>(&ctx)?;
-    fn next_t_mut<T: NextHeader>(
+    fn next_t<T: NextHeader>(
         &mut self,
         range: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<Ptr<T>, ()> {

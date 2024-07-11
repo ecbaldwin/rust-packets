@@ -32,7 +32,7 @@ impl Header {
     pub const LEN: usize = mem::size_of::<Header>();
 
     #[inline(always)]
-    pub fn from_frame_mut(
+    pub fn from_frame(
         frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::Ptr<Header>, ()> {
         let pointer = frame.start as *mut Header;
@@ -49,7 +49,7 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next_mut(
+    fn next(
         &mut self,
         frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
@@ -57,13 +57,13 @@ impl super::AutoNextHeader for Header {
 
         match self.ether_type {
             Type::ARP => Ok(super::HeaderPtr::Arp(
-                self.next_t_mut::<super::arp::Header>(frame)?,
+                self.next_t::<super::arp::Header>(frame)?,
             )),
             Type::IPV4 => Ok(super::HeaderPtr::Ipv4(
-                self.next_t_mut::<super::ipv4::Header>(frame)?,
+                self.next_t::<super::ipv4::Header>(frame)?,
             )),
             Type::IPV6 => Ok(super::HeaderPtr::Ipv6(
-                self.next_t_mut::<super::ipv6::Header>(frame)?,
+                self.next_t::<super::ipv6::Header>(frame)?,
             )),
             _ => Ok(super::HeaderPtr::Unhandled()),
         }

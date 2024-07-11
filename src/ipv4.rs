@@ -91,7 +91,7 @@ impl Header {
 impl super::NextHeader for Header {}
 impl super::AutoNextHeader for Header {
     #[inline(always)]
-    fn next_mut(
+    fn next(
         &mut self,
         frame: core::ops::Range<*mut core::ffi::c_void>,
     ) -> Result<super::HeaderPtr, ()> {
@@ -99,10 +99,10 @@ impl super::AutoNextHeader for Header {
 
         match self.proto {
             super::ip::Proto::TCP => Ok(super::HeaderPtr::Tcp(
-                self.next_t_mut::<super::tcp::Header>(frame)?,
+                self.next_t::<super::tcp::Header>(frame)?,
             )),
             super::ip::Proto::UDP => Ok(super::HeaderPtr::Udp(
-                self.next_t_mut::<super::udp::Header>(frame)?,
+                self.next_t::<super::udp::Header>(frame)?,
             )),
             _ => Ok(super::HeaderPtr::Unhandled()),
         }
