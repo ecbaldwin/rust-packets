@@ -1,6 +1,6 @@
 use core::mem;
 
-use crate::be16;
+use crate::{be16, be32};
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Flags {
@@ -34,24 +34,21 @@ impl Header {
 
     /// Returns the VNI in the packet if valid, otherwise returns None
     #[inline(always)]
-    pub fn vni(&self) -> Option<u32> {
+    // TODO check usage
+    pub fn vni(&self) -> Option<be32> {
         if self.flags == Flags::NO_VNI {
             None
         } else {
-            Some(u32::from_be_bytes([
-                0,
-                self.vni[0],
-                self.vni[1],
-                self.vni[2],
-            ]))
+            Some([0, self.vni[0], self.vni[1], self.vni[2]].into())
         }
     }
 
     /// Sets the VNI to the value given, silently discarding the highest order byte
     #[inline(always)]
-    pub fn set_vni(&mut self, vni: u32) {
+    pub fn set_vni(&mut self, vni: be32) {
         self.flags = Flags::HAS_VNI;
-        self.vni.clone_from_slice(&vni.to_be_bytes()[1..4]);
+        let bytes: [u8; 4] = vni.into();
+        self.vni.clone_from_slice(&bytes[1..4]);
     }
 
     /// Clears the VNI in the packet, setting the flags to mark it invalid
@@ -119,18 +116,18 @@ mod tests {
         h.vni = [1, 2, 3];
         assert_eq!(None, h.vni());
         h.flags = Flags::HAS_VNI;
-        assert_eq!(Some(0x10203), h.vni());
+        assert_eq!(Some(be32::new(0x10203)), h.vni());
     }
 
     #[test]
     fn set_vni() {
         let mut h = Header::default();
         assert_eq!(None, h.vni());
-        h.set_vni(0x30201);
-        assert_eq!(Some(0x30201), h.vni());
+        h.set_vni(be32::new(0x30201));
+        assert_eq!(Some(be32::new(0x30201)), h.vni());
         // Discard the highest order byte
-        h.set_vni(0x4030201);
-        assert_eq!(Some(0x30201), h.vni());
+        h.set_vni(be32::new(0x4030201));
+        assert_eq!(Some(be32::new(0x30201)), h.vni());
     }
 
     #[test]
@@ -139,7 +136,7 @@ mod tests {
             flags: Flags::HAS_VNI,
             ..Header::default()
         };
-        assert_eq!(Some(0), h.vni());
+        assert_eq!(Some(be32::new(0)), h.vni());
         h.clear_vni();
         assert_eq!(None, h.vni());
     }

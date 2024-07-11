@@ -7,26 +7,46 @@ pub struct be16 {
 }
 
 impl be16 {
+    #[inline(always)]
     pub const fn new(value: u16) -> Self {
         Self { val: value.to_be() }
     }
 }
 
 impl From<u16> for be16 {
+    #[inline(always)]
     fn from(value: u16) -> Self {
         Self { val: value.to_be() }
     }
 }
 
 impl From<be16> for u16 {
+    #[inline(always)]
     fn from(be: be16) -> Self {
         u16::from_be(be.val)
+    }
+}
+
+impl From<be16> for [u8; 2] {
+    #[inline(always)]
+    fn from(value: be16) -> Self {
+        value.val.to_ne_bytes()
+    }
+}
+
+impl From<[u8; 2]> for be16 {
+    #[inline(always)]
+    fn from(value: [u8; 2]) -> Self {
+        be16 {
+            val: u16::from_ne_bytes(value),
+        }
     }
 }
 
 impl core::ops::BitXor for be16 {
     type Output = be16;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         Self {
             val: self.val ^ rhs.val,
@@ -40,21 +60,47 @@ pub struct be32 {
     val: u32,
 }
 
+impl be32 {
+    #[inline(always)]
+    pub const fn new(value: u32) -> Self {
+        Self { val: value.to_be() }
+    }
+}
+
 impl From<u32> for be32 {
+    #[inline(always)]
     fn from(value: u32) -> Self {
         Self { val: value.to_be() }
     }
 }
 
 impl From<be32> for u32 {
+    #[inline(always)]
     fn from(be: be32) -> Self {
         u32::from_be(be.val)
+    }
+}
+
+impl From<be32> for [u8; 4] {
+    #[inline(always)]
+    fn from(value: be32) -> Self {
+        value.val.to_ne_bytes()
+    }
+}
+
+impl From<[u8; 4]> for be32 {
+    #[inline(always)]
+    fn from(value: [u8; 4]) -> Self {
+        be32 {
+            val: u32::from_ne_bytes(value),
+        }
     }
 }
 
 impl core::ops::BitXor for be32 {
     type Output = be32;
 
+    #[inline(always)]
     fn bitxor(self, rhs: Self) -> Self::Output {
         Self {
             val: self.val ^ rhs.val,
@@ -67,9 +113,11 @@ pub struct Ptr<T: ?Sized> {
 }
 
 impl<T> Ptr<T> {
+    #[inline(always)]
     pub fn new(pointer: *mut T) -> Self {
         Self { pointer }
     }
+    #[inline(always)]
     pub fn offset(&self, frame: core::ops::Range<*mut core::ffi::c_void>) -> i32 {
         (self.pointer as isize - frame.start as isize) as i32
     }
@@ -78,12 +126,14 @@ impl<T> Ptr<T> {
 impl<T> core::ops::Deref for Ptr<T> {
     type Target = T;
 
+    #[inline(always)]
     fn deref(&self) -> &Self::Target {
         unsafe { &*self.pointer }
     }
 }
 
 impl<T> core::ops::DerefMut for Ptr<T> {
+    #[inline(always)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { &mut *self.pointer }
     }
