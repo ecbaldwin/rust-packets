@@ -1,5 +1,4 @@
 use core::mem;
-use network_types::bitfield::BitfieldUnit;
 
 use crate::be16;
 
@@ -7,8 +6,7 @@ use crate::be16;
 #[repr(C, packed(2))]
 #[derive(Debug, Copy, Clone)]
 pub struct Header {
-    pub _bitfield_align_1: [u8; 0],
-    pub _bitfield_1: BitfieldUnit<[u8; 1usize]>,
+    pub _bitfields: u8,
     pub tos: u8,
     pub tot_len: be16,
     pub id: be16,
@@ -20,47 +18,40 @@ pub struct Header {
     pub destination: [u8; 4],
 }
 
+impl Default for Header {
+    #[inline(always)]
+    fn default() -> Self {
+        Self {
+            _bitfields: 0x45,
+            tos: Default::default(),
+            tot_len: Default::default(),
+            id: Default::default(),
+            frag_off: Default::default(),
+            ttl: Default::default(),
+            proto: Default::default(),
+            check: Default::default(),
+            source: Default::default(),
+            destination: Default::default(),
+        }
+    }
+}
+
 impl Header {
     pub const LEN: usize = mem::size_of::<Header>();
 
     #[inline(always)]
     pub fn ihl(&self) -> u8 {
-        unsafe { mem::transmute(self._bitfield_1.get(0usize, 4u8) as u8) }
+        self._bitfields & 0xf
     }
 
     #[inline(always)]
     pub fn set_ihl(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = mem::transmute(val);
-            self._bitfield_1.set(0usize, 4u8, val as u64)
-        }
+        self._bitfields = self._bitfields & 0xf0 | val & 0xf
     }
 
     #[inline(always)]
     pub fn version(&self) -> u8 {
-        unsafe { mem::transmute(self._bitfield_1.get(4usize, 4u8) as u8) }
-    }
-
-    #[inline(always)]
-    pub fn set_version(&mut self, val: u8) {
-        unsafe {
-            let val: u8 = mem::transmute(val);
-            self._bitfield_1.set(4usize, 4u8, val as u64)
-        }
-    }
-
-    #[inline(always)]
-    pub fn new_bitfield_1(ihl: u8, version: u8) -> BitfieldUnit<[u8; 1usize]> {
-        let mut bitfield_unit: BitfieldUnit<[u8; 1usize]> = Default::default();
-        bitfield_unit.set(0usize, 4u8, {
-            let ihl: u8 = unsafe { mem::transmute(ihl) };
-            ihl as u64
-        });
-        bitfield_unit.set(4usize, 4u8, {
-            let version: u8 = unsafe { mem::transmute(version) };
-            version as u64
-        });
-        bitfield_unit
+        self._bitfields >> 4
     }
 
     /// Returns the source address field.
